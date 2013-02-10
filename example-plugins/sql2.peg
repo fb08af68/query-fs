@@ -1,0 +1,50 @@
+File                 <- S? (StatementBody S?) * (! .)
+                     
+StatementBody        <- SetParam / ReadParam / IsolateDB
+                        / DeclareTransient / DeclareTransientSet
+                        / Proxy / Setter
+                        / Mkdir / OnCreateDir / OnCreateFile / WithFile
+			/ OnRemoveDir
+                        / EncryptBy
+                        / SQLFor / SQLGroupedFor
+			/ Template / CallTemplate
+			/ Symlink / OnSymlink
+
+SQLText              <- String (S "encoded" S String)?
+SQLQuery             <- SQLText
+SQLCommand           <- SQLText
+                     
+IsolateDB            <- "with-separate-db" S Block
+SetParam             <- "set" S Identifier S? "=" S? Value
+ReadParam            <- "read" S Identifier S? "<" S? Value
+DeclareTransient     <- "transient" S Identifier (S (!"=") / S? "=" S?)  Value
+DeclareTransientSet  <- "transient-set" S Identifier (S (!"=") / S? "=" S?)  Value
+Proxy                <- "proxy" S Value S IndexedIdentifier
+Setter               <- "setter" S Value S IndexedIdentifier
+                     
+Block                <- "do" S (!"done" StatementBody StatementEnd)* "done"
+                     
+Mkdir                <- "mkdir" S Value S Block
+OnCreateDir          <- "on-create-dir" S Identifier S SQLCommand
+OnCreateFile         <- "on-create-file" S Identifier S SQLCommand
+OnRemoveDir          <- "on-remove-dir" S SQLCommand
+                     
+WithFile             <- "with-file" S Value S FileBlock
+FileBlock            <- "do" S ((!"done") FileStatement)* "done"
+FileStatement        <- S? FileStatementBody StatementEnd
+FileStatementBody    <- OnRead / OnWrite / OnRemove / OnNonEmptyWrite
+                     
+OnRead               <- "on-read" S Value
+OnWrite              <- "on-write" S Identifier S SQLCommand
+OnNonEmptyWrite      <- "on-non-empty-write" S Identifier S SQLCommand
+OnRemove             <- "on-remove" S SQLCommand
+                     
+EncryptBy            <- "encrypt-by" S Value S "$(" S? WithFile S? ")"
+SQLFor               <- "for" S Identifier S "in" S SQLQuery S StatementBody
+SQLGroupedFor        <- "grouped-for" S Identifier S "in" S SQLQuery S Block
+
+Template             <- "template" S Identifier S? "(" S? (Identifier S?)* ")" S? StatementBody StatementEnd
+CallTemplate         <- "call" S Identifier S? "(" S? (Value S?)* ")"
+
+Symlink              <- "symlink" S Value S Value (S "on-remove" S SQLCommand)?
+OnSymlink            <- "on-symlink" S Identifier S Identifier S SQLCommand

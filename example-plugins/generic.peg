@@ -1,0 +1,22 @@
+WhiteSpace <- " " / "\r" / "\n" / "\t" 
+S <- WhiteSpace +
+StatementEnd <- (" " / "\t")* ('\r' / '\n') S? / S? ';' S?
+
+Value <- '$' IndexedIdentifier / String / Integer
+InnerValue <- '$'? IndexedIdentifier / String / Integer
+
+IdentifierStart <- [-a-zA-Z+*_]
+IdentifierCont  <- IdentifierStart / [/0-9]
+Identifier      <- IdentifierStart IdentifierCont*
+
+String          <- '"' StringEntry* '"'
+StringEntry     <-   ('\\u' [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) 
+                   / ('\\U' [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) 
+		   / ('\\' (! [uU] .)) 
+		   / VariableExpansion 
+		   / (!["] .)
+VariableExpansion <- '${' InnerValue '}'
+
+Integer <- [0-9]+
+
+IndexedIdentifier <- Identifier ('[' InnerValue ']')*

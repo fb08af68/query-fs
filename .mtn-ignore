@@ -1,0 +1,10 @@
+[.]fasl$
+[.]lx32fsl$
+[.]lx64fsl$
+[.]grovel$
+[.]grovel[.]c$
+[.]grovel[.]grovel-tmp.lisp$
+-grovel-result[.]grovel-tmp.lisp$
+-grovel-result[.]c$
+-grovel-result$
+^[.]my[.]tabs$
