@@ -1,0 +1,10 @@
+mkdir "test-table" do
+  grouped-for row in "select name, id, kind from test_table" do
+    with-file "id" do
+      on-read $row[1]
+    done
+    with-file "kind" do
+      on-read $row[2]
+    done
+  done
+done

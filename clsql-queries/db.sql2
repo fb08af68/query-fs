@@ -1,0 +1,6 @@
+set db-server="localhost"
+set db-name="queryfs_test"
+set db-type="postgresql-socket"
+set db-user=""
+read db-password < "/home/raskin/.queryfs-test-pgsql-pass"
+

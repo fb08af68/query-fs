@@ -20,5 +20,6 @@
                )
   :serial t
   :components (
+	       (:file "package")
                (:file "query-fs")
                ))

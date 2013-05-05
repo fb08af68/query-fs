@@ -31,7 +31,7 @@
 	common-lisp:*default-pathname-defaults*))))
 (common-lisp:in-package :query-fs)
 
-(defvar *db-connection-spec* (list "" "" "" ""))
+(defvar *db-connection-spec* (list "" "" "" "" nil))
 (defvar *db-type* :postgresql)
 
 (defmacro variable-post-process (x) 
@@ -75,6 +75,17 @@
    ((integerp x) (format nil "~a" x))
    (t x)))
 
+(defun decode-sql-strings (data &key (encoding :direct))
+  (mapcar 
+   (lambda(entry)
+          (loop for x in entry
+                collect
+                (if (stringp x)
+                    (cl-fuse::string-to-octets x encoding)
+                    x)
+                )) 
+   data))
+
 (defun to-sql (x)
   (let*
     ((res
@@ -90,6 +101,7 @@
     ((equal (symbol-name x) "DB-NAME") '(second *db-connection-spec*))
     ((equal (symbol-name x) "DB-USER") '(third *db-connection-spec*))
     ((equal (symbol-name x) "DB-PASSWORD") '(fourth *db-connection-spec*))
+    ((equal (symbol-name x) "DB-PORT") '(fifth *db-connection-spec*))
     ((equal (symbol-name x) "DB-TYPE") '*db-type*)
     (t x)
     ))
@@ -101,6 +113,8 @@
      (cl-ppcre:regex-replace-all 
        #.(concatenate 'string '(#\Newline) ".*") 
        (eval v) ""))
+    ((equal (symbol-name x) "DB-PORT")
+     (ignore-errors (parse-integer v)))
     (t v)
     ))
 
