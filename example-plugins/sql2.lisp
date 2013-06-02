@@ -31,7 +31,7 @@
 	common-lisp:*default-pathname-defaults*))))
 (common-lisp:in-package :query-fs)
 
-(defvar *db-connection-spec* (list "" "" "" "" nil))
+(defvar *db-connection-spec* (list "" "" "" "" 5432))
 (defvar *db-type* :postgresql)
 
 (defmacro variable-post-process (x) 
@@ -114,7 +114,7 @@
        #.(concatenate 'string '(#\Newline) ".*") 
        (eval v) ""))
     ((equal (symbol-name x) "DB-PORT")
-     (ignore-errors (parse-integer v)))
+     (ignore-errors (parse-integer (eval v) :junk-allowed t)))
     (t v)
     ))
 
