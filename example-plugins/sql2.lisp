@@ -58,10 +58,15 @@
 (defmacro with-db (&body body)
   (let ((db-var (gensym)))
     `(clsql:with-database 
-       (,db-var *db-connection-spec* 
-		:pool t 
-		:database-type 
-		*db-type*)
+       (,db-var 
+	 (cond
+	   ((find *db-type* '(:sqlite :sqlite3)) 
+	    (subseq *db-connection-spec* 0 1))
+	   (t *db-connection-spec* )
+	   )
+	 :pool t 
+	 :database-type 
+	 *db-type*)
        (clsql:with-default-database 
 	 (,db-var)
 	 ,@body))))
@@ -302,7 +307,7 @@
 		  )
 		)
 	      )
-	     ,@ body-eval
+	     (mk-splice ,@ body-eval)
 	     )
 	   )
 	)

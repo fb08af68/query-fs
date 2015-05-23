@@ -46,6 +46,7 @@
 
 (defun backtrace-error (e &optional extra-text)
   (format *error-output* "Error ~s: ~s~%" (or extra-text "") e)
+  (format *error-output* "Error readably ~a: ~a~%" (or extra-text "") e)
   (trivial-backtrace:print-backtrace-to-stream *error-output*)
   )
 
