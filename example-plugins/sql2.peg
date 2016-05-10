@@ -39,7 +39,7 @@ OnWrite              <- "on-write" S Identifier S SQLCommand
 OnNonEmptyWrite      <- "on-non-empty-write" S Identifier S SQLCommand
 OnRemove             <- "on-remove" S SQLCommand
                      
-EncryptBy            <- "encrypt-by" S Value S "$(" S? WithFile S? ")"
+EncryptBy            <- "encrypt-by" S Value S "$(" S? (WithFile / Symlink) S? ")"
 SQLFor               <- "for" S Identifier S "in" S SQLQuery S StatementBody
 SQLGroupedFor        <- "grouped-for" S Identifier S "in" S SQLQuery S Block
 
