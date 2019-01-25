@@ -534,12 +534,17 @@
     `(mk-pair-generator 
        ,var
        ,(ast-eval (seventh x))
-       (mk-dir (car ,var) :eval
-	       (let ((,var (cadr ,var)))
-		 (list
-		   ,@(ast-eval (ninth x))
-		   )
-		 )))))
+       (progn
+	 ;(cl-fuse::fuse-complain "Name: ~s~%" ,var)
+         (mk-dir (cl-fuse::string-to-octets
+                   (car ,var)
+                   cl-fuse-meta-fs::*meta-fs-name-encoding*)
+                 :eval
+                 (let ((,var (cadr ,var)))
+                   (list
+                     ,@(ast-eval (ninth x))
+                     )
+                   ))))))
 
 (def-peg-fun 
   query-fs-sql2::file (x)
