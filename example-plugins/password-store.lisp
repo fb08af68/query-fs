@@ -33,6 +33,13 @@
          )
         full-string))
 
+(defun random-buf (n)
+  (let* ((buf (make-array n :element-type '(unsigned-byte 8)
+                          :initial-element 0)))
+    (with-open-file (f "/dev/urandom" :element-type '(unsigned-byte 8))
+      (read-sequence buf f))
+    buf))
+
 (defun crypto-key (password)
   (let* (
          (hasher (make-instance 'ironclad:pbkdf2 :digest :sha1))
@@ -74,3 +81,34 @@
         output
         ))
 
+(defun unencrypt-aes-new (x key)
+  (ignore-errors 
+   (let* (
+          (byte-arr (base16-string-to-octet-array x))
+          (iv (subseq byte-arr 0 16))
+          (ciphertext (subseq byte-arr 16))
+          (cipher (ironclad:make-cipher :aes :key (crypto-key key) :mode :ctr 
+                                        :initialization-vector iv))
+          (buffer (make-array (length ciphertext) :initial-element 32 :element-type '(unsigned-byte 8)))
+          (dummy (ironclad:decrypt cipher ciphertext buffer))
+          (output (cl-fuse::octets-to-string buffer :direct))
+          )
+         (declare (ignore dummy))
+         output
+         )))
+
+(defun encrypt-aes-new (x key)
+  (let* (
+         (iv (random-buf 16))
+         (cipher (ironclad:make-cipher :aes :key (crypto-key key) :mode :ctr 
+                                       :initialization-vector iv))
+         (byte-arr (cl-fuse::string-to-octets x :direct))
+         (buffer (make-array (length byte-arr) :initial-element 32 :element-type '(unsigned-byte 8)))
+         (dummy (ironclad:encrypt cipher byte-arr buffer))
+         (output (concatenate 'string
+                              (octet-array-to-base16-string iv)
+                              (octet-array-to-base16-string buffer)))
+         )
+        (declare (ignore dummy))
+        output
+        ))

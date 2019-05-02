@@ -3,7 +3,7 @@
 (load-plugin "generic-readers.lisp")
 (load-plugin "password-store.lisp")
 
-(defun mkfile-add-encryption (password file-expression value-to-string)
+(defun mkfile-add-encryption (password file-expression value-to-string &key (old t))
   (let*
     (
      (macroexpanded-expression (macroexpand file-expression))
@@ -45,7 +45,8 @@
                           (let* ((c (funcall ,old-content))
                                  (c-str (and c ,(funcall value-to-string 'c)))
                                  (p-str ,(funcall value-to-string password))
-                                 (ue (and c (unencrypt-aes c-str p-str)))
+                                 (ue (and c (if ,old (unencrypt-aes c-str p-str)
+                                              (unencrypt-aes-new c-str p-str))))
                                  (ueo (and 
                                         c 
                                         (cl-fuse::string-to-octets 
@@ -62,9 +63,13 @@
                       `(lambda (x) 
                          (funcall 
                            ,old-writer 
-                           (encrypt-aes 
-                             ,(funcall value-to-string 'x)
-                             ,(funcall value-to-string password))))))
+                           (if ,old
+                             (encrypt-aes 
+                               ,(funcall value-to-string 'x)
+                               ,(funcall value-to-string password))
+                             (encrypt-aes-new
+                               ,(funcall value-to-string 'x)
+                               ,(funcall value-to-string password)))))))
      )
     (or
       (when is-file 

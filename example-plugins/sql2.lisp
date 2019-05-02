@@ -496,11 +496,20 @@
      ,@(ast-eval (fifth x))))
 
 (def-peg-fun
-  query-fs-sql2::encryptby (x)
+  query-fs-sql2::encryptbyold (x)
   (mkfile-add-encryption
     (ast-eval (third x))
     (ast-eval (seventh x))
-    (lambda (x) `(sql-real-value ,x :encoding :direct))))
+    (lambda (x) `(sql-real-value ,x :encoding :direct))
+    :old t))
+
+(def-peg-fun
+  query-fs-sql2::encryptbynew (x)
+  (mkfile-add-encryption
+    (ast-eval (third x))
+    (ast-eval (seventh x))
+    (lambda (x) `(sql-real-value ,x :encoding :direct))
+    :old nil))
 
 (def-peg-fun
   query-fs-sql2::sqlfor (x)
