@@ -1,0 +1,6 @@
+set db-server="127.0.0.1"
+set db-name="queryfs_raskin"
+set db-type="postgresql"
+set db-user="raskin"
+
+read db-password < "/home/raskin/.queryfs-pgsql-password"

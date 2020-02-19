@@ -1,0 +1,22 @@
+with-separate-db do
+
+set db-type = "sqlite3"
+set db-server = "/home/raskin/mnt/query-fs/databases/notes.sqlite3"
+
+  on-create-file name "insert into plain_notes (name, contents) values (${name}, '')"
+
+done
+
+with-separate-db do
+
+set db-type = "sqlite3"
+set db-server = "/home/raskin/mnt/query-fs/databases/notes.sqlite3"
+
+for note in "select name, contents from plain_notes"
+  with-file $name do
+    on-read $note[1]
+    on-write data "update plain_notes set contents = ${data} where name = ${name}"
+    on-remove "delete from plain_notes where name = ${name}"
+  done
+
+done
