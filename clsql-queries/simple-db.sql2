@@ -1,0 +1,31 @@
+set db-server="127.0.0.1"
+set db-name="test_queryfs"
+set db-type="postgresql"
+set db-user="test"
+
+read db-password < "/home/test/psql-pass"
+
+mkdir "all" do
+  for x in "select name, content from test_table"
+    with-file $name do
+      on-read $x[1]
+      on-write data "update test_table set content = ${data} where name = ${name}"
+      on-remove "delete from test_table where name = ${name}"
+    done
+  on-create-file name "insert into test_table (name) values (${name})"
+done
+
+mkdir "long" do
+  for x in "select name, content from test_table where length(name) > 4"
+    with-file $name do
+      on-read $x[1]
+      on-write data "update test_table set content = ${data} where name = ${name}"
+    done
+done
+
+mkdir "silly" do
+  for x in "select ${x[0]}, 'Indeed, we have '|| ${x[0]} ||' here!' where ${x[0]} is not null limit 1"
+    with-file $name do
+      on-read $x[1]
+    done
+done

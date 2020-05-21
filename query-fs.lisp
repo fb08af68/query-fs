@@ -209,6 +209,8 @@
   (cl-fuse::fuse-complain "Name to remove: ~s~%" name)
   )
 
+(defmacro compile-time-value (x) (eval x))
+
 (defun run-fs 
   (&key 
     target 
@@ -226,6 +228,15 @@
       (setf *target* target))
     (setf *query-path* (or query-path (concatenate 'string *target* "/queries")))
     (setf *plugin-path* (or plugin-path (concatenate 'string *target* "/plugins")))
+    (unless (probe-file (format nil "~a/." *plugin-path*))
+      (setf *plugin-path* 
+            (format nil "~a/example-plugins" 
+                    (cl-ppcre:regex-replace
+                      "/[^/]+/?$"
+                      (namestring
+                        (compile-time-value
+                          (or *compile-file-pathname* *load-pathname*)))
+                      ""))))
     (setf *result-path* (or result-path (concatenate 'string *target* "/results")))
     (setf cl-fuse::*break-on-errors* break-on-errors)
     (setf cl-fuse-meta-fs:*object-cache-duration* 
@@ -309,8 +320,6 @@
       )
     )
   )
-
-(defmacro compile-time-value (x) (eval x))
 
 (defun load-demo (name) 
   (load 
