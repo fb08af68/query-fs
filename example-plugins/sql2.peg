@@ -33,12 +33,13 @@ OnRemoveDir          <- "on-remove-dir" S SQLCommand
 WithFile             <- "with-file" S Value S FileBlock
 FileBlock            <- "do" S ((!"done") FileStatement)* "done"
 FileStatement        <- S? FileStatementBody StatementEnd
-FileStatementBody    <- OnRead / OnWrite / OnRemove / OnNonEmptyWrite
+FileStatementBody    <- OnRead / OnWrite / OnRemove / OnNonEmptyWrite / IsExecutable
                      
 OnRead               <- "on-read" S Value
 OnWrite              <- "on-write" S Identifier S SQLCommand
 OnNonEmptyWrite      <- "on-non-empty-write" S Identifier S SQLCommand
 OnRemove             <- "on-remove" S SQLCommand
+IsExecutable         <- "is-executable"
                      
 EncryptByOld            <- ("encrypt-by-old" / "encrypt-by") S Value S "$(" S? (WithFile / Symlink) S? ")"
 EncryptByNew            <- "encrypt-by-new" S Value S "$(" S? (WithFile / Symlink) S? ")"

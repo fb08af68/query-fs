@@ -124,8 +124,9 @@
     ))
 
 (defmacro mk-file-key
-  (name &key (on-read "") (on-write nil) (on-remove nil))
-  `(mk-file ,name ,on-read ,on-write ,on-remove))
+  (name &key (on-read "") (on-write nil) (on-remove nil) 
+        (size nil) (executable nil))
+  `(mk-file ,name ,on-read ,on-write ,on-remove ,size ,executable))
 
 (defun simplify-concatenation (l)
   (iter
@@ -259,6 +260,7 @@
    (OnRemove
      ((_ _ ?x) 
       `(:on-remove ,(! ?x))))
+   (IsExecutable (_ `(:executable t)))
    (OnRemoveDir 
      ((_ _ ?x) `(mk-dir-remover 
 		  ,(! ?x))))
