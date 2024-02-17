@@ -1,0 +1,101 @@
+mkdir "::all-streams" do
+grouped-for stream in "select distinct series from web_streams where (${stream[0]} is null or series = ${stream[0]})" do
+  mkdir "fresh" do
+    for entry in "select (case when (deferred is null) then '' else (deferred || '-') end) || eid || '.' || kind, view, eid from web_streams where fresh and series = ${stream[0]}"
+      symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+  done
+  mkdir "all" do
+    for entry in "select eid || '.' || kind, view, eid from web_streams where series = ${stream[0]}"
+      symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+  done
+  mkdir "fresh-non-deferred" do
+    for entry in "select (case when (deferred is null) then '' else (deferred || '-') end) || eid || '.' || kind, view, eid from web_streams where fresh and series = ${stream[0]} and deferred is null"
+      symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+  done 
+  mkdir "some-fresh" do
+    grouped-for count in "(select ${count[0]}) union (select 1) union (select 2) union (select 10) union (select 25) union (select 100);" do
+      symlink "fresh" "."
+      for entry in "select (case when (deferred is null) then '' else (deferred || '-') end) || eid || '.' || kind as basename, view, eid from web_streams where fresh and series = ${stream[0]} order by basename limit ${count[0]}"
+      symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+    done
+  done
+  mkdir "random-fresh" do
+    grouped-for count in "(select ${count[0]}) union (select 1) union (select 2) union (select 10) union (select 25) union (select 100);" do
+      symlink "fresh" "."
+      for entry in "
+           (select eid || '.' || kind, view, eid from web_streams where fresh and series = ${stream[0]} order by random() limit (case when (${count[0]} is null) then 1 else ${count[0]} end))
+           union
+           (select eid || '.' || kind, view, eid from web_streams where fresh and (eid || '.' || kind = ${entry[0]}) limit 1)
+         "
+        symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+    done
+  done
+done
+done
+mkdir "::all-fresh" do
+  for entry in "select (case when (deferred is null) then '' else (deferred || '-') end) || eid || '.' || kind, view, eid from web_streams where fresh and (${entry[0]} is null or eid = regexp_replace(${entry[0]}, '[.][^.]*$', '') or deferred = regexp_replace(${entry[0]},'-.*',''))"
+    symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+done
+mkdir "::some-fresh" do
+  grouped-for count in "(select ${count[0]}) union (select 1) union (select 2) union (select 10) union (select 25) union (select 100);" do
+    symlink "fresh" "."
+    for entry in "select (case when (deferred is null) then '' else (deferred || '-') end) || eid || '.' || kind as basename, view, eid from web_streams where fresh order by basename limit ${count[0]}"
+    symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+  done
+done
+mkdir "::all-fresh-non-deferred" do
+  for entry in "select eid || '.' || kind, view, eid from web_streams where fresh and deferred is null and (${entry[0]} is null or eid = regexp_replace(${entry[0]}, '[.][^.]*$', ''))"
+    symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+  mkdir "fresh" do
+    for entry in "select eid || '.' || kind, view, eid from web_streams where fresh and deferred is null"
+      symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+  done
+done
+mkdir "::random-fresh" do
+  grouped-for count in "(select ${count[0]}) union (select 1) union (select 2) union (select 10) union (select 25) union (select 100);" do
+    symlink "fresh" "."
+    for entry in "
+         (select eid || '.' || kind, view, eid from web_streams where fresh order by random() limit (case when (${count[0]} is null) then 1 else ${count[0]} end))
+         union
+         (select eid || '.' || kind, view, eid from web_streams where fresh and (eid || '.' || kind = ${entry[0]}) limit 1)
+       "
+      symlink $entry[0] $entry[1] on-remove "update web_streams set fresh = 'f', read_timestamp=now(), deferred = null where eid = ${entry[2]}"
+    done
+done
+mkdir "::have-fresh" do
+  for entry in "select distinct series, '../::all-streams/' || series from web_streams where fresh"
+    symlink $entry[0] $entry[1]
+done
+mkdir "::have-fresh-non-deferred" do
+  for entry in "select distinct series, '../::all-streams/' || series from web_streams where fresh and deferred is null"
+    symlink $entry[0] $entry[1]
+done
+mkdir "::admin" do
+  mkdir "fresh" do
+    grouped-for stream in "select distinct series from web_streams where fresh" do
+      for entry in "select eid || '::' || id, eid || E'\\n' || id::text || E'\\n' || url || E'\\n' || series || E'\\n' || retrieved || E'\\n' || timestamp || ' ' || kind, id from web_streams where series = ${stream[0]}"
+        with-file $entry[0] do
+          on-read $entry[1]
+          on-remove "delete from web_streams where id = ${entry[2]}"
+        done
+    done
+  done
+  mkdir "fresh-non-deferred" do
+    grouped-for stream in "select distinct series from web_streams where fresh and deferred is null" do
+      for entry in "select eid || '::' || id, eid || E'\\n' || id::text || E'\\n' || url || E'\\n' || series || E'\\n' || retrieved || E'\\n' || timestamp || ' ' || kind, id from web_streams where series = ${stream[0]}"
+        with-file $entry[0] do
+          on-read $entry[1]
+          on-remove "delete from web_streams where id = ${entry[2]}"
+        done
+    done
+  done
+  mkdir "all" do
+    grouped-for stream in "select distinct series from web_streams" do
+      for entry in "select eid || '::' || id, eid || E'\\n' || id::text || E'\\n' || url || E'\\n' || series || E'\\n' || retrieved || E'\\n' || timestamp || ' ' || kind, id from web_streams where series = ${stream[0]}"
+        with-file $entry[0] do
+          on-read $entry[1]
+          on-remove "delete from web_streams where id = ${entry[2]}"
+        done
+    done
+  done
+done
