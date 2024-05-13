@@ -291,7 +291,7 @@
 	 (("help" #\h) :type nil :documentation "Display this help")
 	 )
        )
-     (args (get-command-line-arguments))
+     (args (uiop:command-line-arguments))
      (opts (multiple-value-list 
 	     (process-command-line-options 
 	       spec (append prepended-arguments args))))
